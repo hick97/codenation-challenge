@@ -10,7 +10,6 @@ app.use('/', require('./routes/routes'));
 
 //setando engine de view
 app.set('view engine', 'ejs');
-//app.use(express.static(__dirname + '/public'));
 
 const port = process.env.PORT || 3001;
 
@@ -19,4 +18,4 @@ app.listen(port, err =>{
         console.log('Error');
     else
         console.log('Server is running on port 3001');
-})
+});

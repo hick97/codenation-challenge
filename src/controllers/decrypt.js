@@ -9,47 +9,35 @@ const file = require(fileName);
 'use strict';
 
 //FUNCTIONS
-function creatJson(params = {}){
+function createJson(params = {}){
     let data = JSON.stringify(params);
  
     fs.writeFileSync('answer.json', data); 
 }
-function updateJSON(updatedValue, flag = 1){
 
-    if(flag){
-        file.decifrado = updatedValue;
+async function updateJSON(sha1, decryptValue){
     
-        fs.writeFile(fileName, JSON.stringify(file), function (err) {
-    
-            if (err) return console.log(err);
-    
-            var updateFile = JSON.stringify(file);
-    
-            fs.writeFileSync('answer.json', updateFile);
-        });
-    }else{
-        file.resumo_criptografico = updatedValue;
-    
-        fs.writeFile(fileName, JSON.stringify(file), function (err) {
-    
-            if (err) return console.log(err);
-    
-            var updateFile = JSON.stringify(file);
-    
-            fs.writeFileSync('answer.json', updateFile);
-        });
-    }
+    file.decifrado = decryptValue;
+    file.resumo_criptografico = sha1;
 
+    await fs.writeFile(fileName, JSON.stringify(file), function (err) {
+    
+        if (err) return console.log(err);
+
+        var updateFile = JSON.stringify(file);
+        
+
+        fs.writeFileSync('answer.json', updateFile);
+    });
 }
 
-async function decrypt(encryptValue){
+async function decrypt(encryptValue, positionsToBack){
 
     var originalAlphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v','w', 'x', 'y', 'z'];
+    //['z', 'y', 'x' ... , 'a']
     var alphabet = originalAlphabet.reverse();
 
     var splitEncrypt = encryptValue.split('');
-
-    //console.log(splitEncrypt);
 
     var result = '';
 
@@ -57,7 +45,7 @@ async function decrypt(encryptValue){
 
         if(splitEncrypt[i].match(/[A-Z]/gi)){
 
-            var newPosition = await ((alphabet.indexOf(splitEncrypt[i]) + 10) % alphabet.length);
+            var newPosition = await ((alphabet.indexOf(splitEncrypt[i]) + positionsToBack) % alphabet.length);
             
             result = result + alphabet[newPosition];
 
@@ -65,42 +53,51 @@ async function decrypt(encryptValue){
             result = result + splitEncrypt[i]; 
         }
     }
-    //console.log(result);
+
     return result;
 }
 
-//METHODS
-module.exports = {
+//DECRYPT CLASS
+class DecryptController{
     async decrypt(req, res){
-        
-        var result = await axios.get('https://api.codenation.dev/v1/challenge/dev-ps/generate-data?token='+ process.env.CODENATION_TOKEN);
-        
-        await creatJson({
-            numero_casas: result.data.numero_casas,
-            token: result.data.token,
-            cifrado: result.data.cifrado,
-            decifrado: result.data.decifrado,
-            resumo_criptografico: result.data.resumo_criptografico
-        })
-          
-        var decryptValue = await decrypt(result.data.cifrado);
-        await shasum.update(decryptValue);
-        
-        await updateJSON(shasum.digest('hex') , 0);
-        await updateJSON(decryptValue);
-        
-        res.redirect('/submit?json=true');
+        try{
 
-    },
-    async submit(req, res){
+            var result = await axios.get('https://api.codenation.dev/v1/challenge/dev-ps/generate-data?token='+ process.env.CODENATION_TOKEN);
+            var numero_casas = result.data.numero_casas;
+            var token = result.data.token;
+            var cifrado = result.data.cifrado;
+            var decifrado = result.data.decifrado;
+            var resumo_criptografico = result.data.resumo_criptografico;
 
-        var token = process.env.CODENATION_TOKEN;
-        var json = false;
+        }catch(err){
+           if(err) console.log('Falha ao realização requisição dos dados. Erro: ' + err.message);
+        }
+        try{
 
-        if(req.query.json)
-            json = true;
+            await createJson({
+                numero_casas: numero_casas,
+                token: token,
+                cifrado: cifrado,
+                decifrado: decifrado,
+                resumo_criptografico: resumo_criptografico
+            });
 
-        res.render('index', {token, json})
-    
-    },
+        }catch(err){
+            if(err) console.log('Falha ao criar JSON. Erro: ' + err.message);
+        }
+        try{
+
+            var decryptValue = await decrypt(cifrado, numero_casas);
+            await shasum.update(decryptValue);
+            
+            await updateJSON(shasum.digest('hex') , decryptValue);
+            
+            res.redirect('/submit?json=true');
+
+        }catch(err){
+            if(err) console.log('Falha ao atualizar JSON com valor decifrado. Erro: ' + err.message);
+        }
+    }
 }
+
+module.exports = new DecryptController();
