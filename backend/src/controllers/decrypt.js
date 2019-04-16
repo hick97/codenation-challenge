@@ -60,6 +60,9 @@ async function decrypt(encryptValue, positionsToBack){
 //DECRYPT CLASS
 class DecryptController{
     async decrypt(req, res){
+
+        var jsonStatus = '';
+
         try{
 
             var result = await axios.get('https://api.codenation.dev/v1/challenge/dev-ps/generate-data?token='+ process.env.CODENATION_TOKEN);
@@ -70,7 +73,11 @@ class DecryptController{
             var resumo_criptografico = result.data.resumo_criptografico;
 
         }catch(err){
-           if(err) console.log('Falha ao realização requisição dos dados. Erro: ' + err.message);
+
+           if(err) 
+                console.log('Falha ao realização requisição dos dados. Erro: ' + err.message);
+                jsonStatus = 'Failed.';
+                res.json({jsonStatus});
         }
         try{
 
@@ -83,7 +90,11 @@ class DecryptController{
             });
 
         }catch(err){
-            if(err) console.log('Falha ao criar JSON. Erro: ' + err.message);
+
+            if(err) 
+                console.log('Falha ao criar JSON. Erro: ' + err.message);
+                jsonStatus = 'Failed.';
+                res.json({jsonStatus});
         }
         try{
 
@@ -91,11 +102,16 @@ class DecryptController{
             await shasum.update(decryptValue);
             
             await updateJSON(shasum.digest('hex') , decryptValue);
-            
-            res.redirect('/submit?json=true');
 
+            jsonStatus = 'Success!'
+            res.json({jsonStatus, token: process.env.CODENATION_TOKEN});
+            
         }catch(err){
-            if(err) console.log('Falha ao atualizar JSON com valor decifrado. Erro: ' + err.message);
+
+            if(err)
+                console.log('Falha ao atualizar JSON com valor decifrado. Erro: ' + err.message);
+                jsonStatus = 'Failed.';
+                res.json({jsonStatus});
         }
     }
 }

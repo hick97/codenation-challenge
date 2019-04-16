@@ -1,0 +1,48 @@
+.main-container{
+    max-width: 900px;
+    margin: 50px auto 0;
+}
+.main-container header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #111;
+}
+.main-container header h1{
+    font-size: 21px;
+    padding-left: 15px;
+    margin-left: 15px;
+    border-left: 1px solid #ddd;
+    color: #333;
+}
+.main-container .upload {
+    border-radius: 4px;
+    padding: 30px;
+    text-align: center;
+    border: 1px dashed #ddd;
+    color: #999;
+    margin-top: 50px;
+    cursor: pointer;
+}
+.main-container .btn-json {
+    padding: 10px;
+    font-weight: 400;
+    font-size: 14px;
+    background-color: #111;
+    color: #fff;
+    margin-top: 20px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+.main-container .json-status{
+    font-weight: bold;
+    color: #111;
+    margin-left: 10px;
+}
+.main-container .score{
+    font-weight: bold;
+    color: #111;
+    margin-top: 20px;
+    float: right;
+}
