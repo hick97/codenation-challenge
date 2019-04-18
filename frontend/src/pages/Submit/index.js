@@ -22,6 +22,8 @@ export default class Submit extends Component {
 
     console.log(response.data);
 
+    window.open(response.data.uploadURL);
+
     this.setState({
       jsonStatus: response.data.jsonStatus,
       token: response.data.token,
@@ -54,7 +56,7 @@ export default class Submit extends Component {
     return (
       <div className='main-container'>
         
-        <header>Codenation Challenge<h1>Selecione seu arquivo JSON</h1></header>
+        <header>Codenation Challenge<h1>Submeta seu arquivo JSON</h1></header>
         <Dropzone onDropAccepted={this.handleSubmit}>
           {({getRootProps, getInputProps})=>(
             <div className="upload" {...getRootProps()}>

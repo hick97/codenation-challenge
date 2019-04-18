@@ -1,34 +1,29 @@
 const axios = require('axios');
 const fs = require('fs');
-const FormData = require('form-data');
 const sha1 = require('sha1');
 const crypto = require('crypto'), shasum = crypto.createHash('sha1');
-const fileName = '../../answer.json';
+const path = require('path');
+const fileName = path.join(__dirname, '..', '..', 'answer.json');
 const file = require(fileName);
 
 'use strict';
 
 //FUNCTIONS
-function createJson(params = {}){
-    let data = JSON.stringify(params);
+async function createJson(params = {}){
+    let data = await JSON.stringify(params);
  
-    fs.writeFileSync('answer.json', data); 
+    await fs.writeFileSync('answer.json', data); 
 }
 
 async function updateJSON(sha1, decryptValue){
-    
-    file.decifrado = decryptValue;
-    file.resumo_criptografico = sha1;
 
-    await fs.writeFile(fileName, JSON.stringify(file), function (err) {
-    
-        if (err) return console.log(err);
+    var obj = await JSON.parse(fs.readFileSync(fileName, 'utf8'));
 
-        var updateFile = JSON.stringify(file);
-        
+    obj.decifrado = decryptValue;
+    obj.resumo_criptografico = sha1;
 
-        fs.writeFileSync('answer.json', updateFile);
-    });
+    await fs.writeFileSync('answer.json', JSON.stringify(obj)); 
+
 }
 
 async function decrypt(encryptValue, positionsToBack){
@@ -37,7 +32,7 @@ async function decrypt(encryptValue, positionsToBack){
     //['z', 'y', 'x' ... , 'a']
     var alphabet = originalAlphabet.reverse();
 
-    var splitEncrypt = encryptValue.split('');
+    var splitEncrypt = encryptValue.toLowerCase().split('');
 
     var result = '';
 
@@ -102,9 +97,14 @@ class DecryptController{
             await shasum.update(decryptValue);
             
             await updateJSON(shasum.digest('hex') , decryptValue);
+            
+            jsonStatus = 'Success!';
 
-            jsonStatus = 'Success!'
-            res.json({jsonStatus, token: process.env.CODENATION_TOKEN});
+            res.json({
+                jsonStatus, 
+                token: process.env.CODENATION_TOKEN, 
+                uploadURL: `${process.env.APP_URL}/download`
+            });
             
         }catch(err){
 
